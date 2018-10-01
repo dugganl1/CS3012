@@ -3,27 +3,29 @@ print('Hello World')
 # Task: Given Binary Tree and two inputs x and y, write a program to find their LOWEST COMMON ANCESTOR
 
 
-class Node:
+class Node(object):
     # Constructor
-    def __init__(self, value):
-        self.val = value
+    def __init__(self, x):
+        self.val = x
         self.left = None
         self.right = None
 
 
 class Solve(object):
-    def lowestCommonAncestor(self, root, x, y):
+    def lowestCommonAncestor(self, root, p, q):
 
-        if not root or y == root or x == root:
+        if root is None:
+            return None
+
+        if root == p or root == q:
             return root
 
-        left = self.lowestCommonAncestor(root.left, x, y)
-        right = self.lowestCommonAncestor(root.right, x, y)
+        left = self.lowestCommonAncestor(root.left, p, q)
+        right = self.lowestCommonAncestor(root.right, p, q)
 
-        if left and right:
+        if left is not None and right is not None:
             return root
-        if left:
-            return left
-        elif right:
+        if left is None:
             return right
-        return None
+        else:
+            return left
