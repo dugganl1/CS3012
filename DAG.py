@@ -4,7 +4,7 @@ class DAG(object):
     class Node:
         def __init__(self, key):
             self.key = key
-            self.links = []
+            self.directedTo = []
 
         def pointsTo(self, node):
             self.links.append(node)
@@ -12,9 +12,9 @@ class DAG(object):
     def __init__(self):
         self.graph = {}
 
-    def add_node(self, node, graph=None):
-        if not graph:
-            graph = self.graph
+    # Add node if it doesn't exist already
+    def add_node(self, node):
+        graph = self.graph
 
         if node in graph:
             return False
