@@ -1,68 +1,90 @@
 import unittest
 from DAG import DAG
 
-graph = DAG()
-
 """
-For testing purposes I'm going to contruct the following DAG (direction down)
+For testing purposes I'm going to contruct the following DAG (direction down). This will be used in the later tests.
+Avoids having to keep creating new graph in each method.
           1
        /    \
       2      3
      / \     /\
     4   5   6  7
-       /|\   \
+       /|\ /  \
       8 9 10  11
 """
+global graph
+graph = DAG()
+
+for x in range(1, 12):
+    graph.add_node(x)
+
+graph.add_edge(1, 2)
+graph.add_edge(1, 3)
+graph.add_edge(2, 4)
+graph.add_edge(2, 5)
+graph.add_edge(3, 6)
+graph.add_edge(3, 7)
+graph.add_edge(5, 8)
+graph.add_edge(5, 9)
+graph.add_edge(5, 10)
+graph.add_edge(6, 10)
+graph.add_edge(6, 11)
 
 
 class testLCA_DAG(unittest.TestCase):
     def setUp(self):
         pass
 
-    def test_adding_nodes(self):
+    def test_simple_adding_nodes_and_edges(self):
         # Check it adds a node
-        graph.add_node(1)
-        self.assertEqual(graph.graph, {1: []})
+        basic_graph = DAG()
+        basic_graph.add_node('A')
+        self.assertEqual(basic_graph.graph, {'A': []})
         # Check it doesn't add a node if it already exists
-        self.assertFalse(graph.add_node(1))
+        self.assertFalse(basic_graph.add_node('A'))
         # Check it adds another node
-        graph.add_node(2)
-        self.assertEqual(graph.graph, {1: [], 2: []})
+        basic_graph.add_node('B')
+        self.assertEqual(basic_graph.graph, {'A': [], 'B': []})
+        # Adding a directed edge from 1 to 2
+        basic_graph.add_edge('A', 'B')
+        self.assertEqual(basic_graph.graph, {'A': ['B'], 'B': []})
+        # When adding an edge, if you include a node that isn't part of the graph it should trigger a ValueError
+        self.assertRaises(ValueError, basic_graph.add_edge, 'B', 'C')
 
-    def test_edges(self):
-        # Going to add a directed edge from 1 to 2
-        graph.add_edge(1, 2)
-        self.assertEqual(graph.graph, {1: [2], 2: []})
-
-    def test_multiple_nodes_and_edges(self):
-        # Setting up DAG like diagram at top of file
-        graph.add_node(3)
-        graph.add_edge(1, 3)
-        graph.add_node(4)
-        graph.add_node(5)
-        graph.add_edge(2, 4)
-        graph.add_edge(2, 5)
-        graph.add_node(6)
-        graph.add_node(7)
-        graph.add_edge(3, 6)
-        graph.add_edge(3, 7)
-        graph.add_node(8)
-        graph.add_node(9)
-        graph.add_node(10)
-        graph.add_edge(5, 8)
-        graph.add_edge(5, 9)
-        graph.add_edge(5, 10)
-        graph.add_node(11)
-        graph.add_edge(6, 11)
-        graph.add_edge(7, 11)
-        self.assertEqual(graph.graph, {1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: [8, 9, 10],
-                                       6: [11], 7: [11], 8: [], 9: [], 10: [], 11: []})
+    def test_graph_setup(self):
+        self.assertEqual(graph.graph, {1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: [8, 9, 10], 6: [10, 11], 7: [], 8: [], 9: [], 10: [], 11: []})
 
     def test_lca(self):
-        print(graph.dfs_wrapper(graph.graph, 1, 1))
-        pass
+        # Check that the when the same node is passed in twice, it returns itself as the LCA
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 1, 1), 1)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 6, 6), 6)
 
-    print("Success.")
+        # Now lets check some standard LCA's
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 8, 9), 5)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 7, 4), 1)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 7, 11), 3)
+
+        # Test that if you include nodes that aren't in the graph, the LCA function returns None.
+        # One node exists, one doesn't
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 10, 12), None)
+        # Neither exists
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 15, 16), None)
+        # Add rogue node with no edge to anything, there shouldn't be a LCA to our main graph
+        graph.add_node(20)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 1, 20), None)
+
+    def more_complex_lca(self):
+        # Going to add a few more nodes/edges and check that lca is still performing as intended
+        graph.add_edge(10, 11)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 9), 5)
+        graph.add_edge(3, 9)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 9), 3)
+        graph.add_node(12)
+        graph.add_edge(9, 12)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 12), 3)
+        graph.add_node(13)
+        graph.add_edge(4, 13)
+        self.assertEqual(graph.dfs_wrapper(graph.graph, 13, 12), 1)
 
 
 if __name__ == '__main__':

@@ -4,14 +4,6 @@ import sys
 
 class DAG(object):
 
-    class Node:
-        def __init__(self, key):
-            self.key = key
-            self.directedTo = []
-
-        def pointsTo(self, node):
-            self.links.append(node)
-
     def __init__(self):
         self.graph = {}
 
@@ -24,9 +16,8 @@ class DAG(object):
 
         graph[node] = []
 
-    def add_edge(self, node_one, node_two, graph=None):
-        if not graph:
-            graph = self.graph
+    def add_edge(self, node_one, node_two):
+        graph = self.graph
 
         if node_one in graph and node_two in graph:
             graph[node_one].append(node_two)
@@ -40,6 +31,10 @@ class DAG(object):
         nodeOne_list = []
         nodeTwo_list = []
 
+        # If the same node is passed in twice, then the LCA is that node
+        if(node_one == node_two):
+            return node_one
+
         for node in graph:
             self.lca_dfs([node], graph, node, 1, node_one)
             self.lca_dfs([node], graph, node, 2, node_two)
@@ -50,12 +45,13 @@ class DAG(object):
             for b in nodeTwo_list:
                 count = 0
                 for index, node1 in enumerate(reversed(a)):
-                    if a == b and count < lowest_count:
-                        LCANode = b
-                        lowest_node = count
-                        return LCANode
+                    count = index
+                    for node2 in reversed(b):
+                        if node1 == node2 and count < lowest_count:
+                            LCANode = node2
+                            return LCANode
 
-                    count += 1
+                        count += 1
 
     def lca_dfs(self, node_list, graph, node, index, end_node):
         if(node == end_node):
