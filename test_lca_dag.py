@@ -54,6 +54,9 @@ class testLCA_DAG(unittest.TestCase):
     def test_graph_setup(self):
         self.assertEqual(graph.graph, {1: [2, 3], 2: [4, 5], 3: [6, 7], 4: [], 5: [8, 9, 10], 6: [10, 11], 7: [], 8: [], 9: [], 10: [], 11: []})
 
+        # Check that node that already exists wont be added again - i.e. should return false
+        self.assertFalse(graph.add_node(10))
+
     def test_lca(self):
         # Check that the when the same node is passed in twice, it returns itself as the LCA
         self.assertEqual(graph.dfs_wrapper(graph.graph, 1, 1), 1)
@@ -72,19 +75,6 @@ class testLCA_DAG(unittest.TestCase):
         # Add rogue node with no edge to anything, there shouldn't be a LCA to our main graph
         graph.add_node(20)
         self.assertEqual(graph.dfs_wrapper(graph.graph, 1, 20), None)
-
-    def more_complex_lca(self):
-        # Going to add a few more nodes/edges and check that lca is still performing as intended
-        graph.add_edge(10, 11)
-        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 9), 5)
-        graph.add_edge(3, 9)
-        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 9), 3)
-        graph.add_node(12)
-        graph.add_edge(9, 12)
-        self.assertEqual(graph.dfs_wrapper(graph.graph, 11, 12), 3)
-        graph.add_node(13)
-        graph.add_edge(4, 13)
-        self.assertEqual(graph.dfs_wrapper(graph.graph, 13, 12), 1)
 
 
 if __name__ == '__main__':
