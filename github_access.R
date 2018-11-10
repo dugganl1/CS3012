@@ -53,6 +53,22 @@ location = me$location
 last_activity = me$updated_at
 hireable = me$hireable
 
+#Print out the data in a readable manner
+cat("Github Profile Details",
+    "\nName: ", name,
+    "\nUser ID: ", id,
+    "\nUsername: ", username,
+    "\nEmail: ", email,
+    "\nCompany: ", company, 
+    "\nFollowers: ", num_followers,
+    "\nFollowing: ", num_following,
+    "\nNumber of Public Repositories: ", num_public_repo,
+    "\nAcount Created: ", date_account_created,
+    "\nLast Activity: ", last_activity,
+    "\nLocation: ", location, 
+    "\nHireable?: ", hireable)
+
+
 #Repositories Details
 myrepos = fromJSON(me$repos_url)
 repo_names = myrepos$name
@@ -62,15 +78,39 @@ description = myrepos$description
 num_forks = myrepos$forks_count
 num_watchers = myrepos$watchers
 
+#Print out the data in a readable manner
+cat("Repository Details")
+for(i in 1:length(repo_names))
+{
+  cat("Repository Name: ", repo_names[i],
+      "\nLanguage: ", languages[i],
+      "\nDate Created: ", created[i],
+      "\nDescription: ", description[i],
+      "\nForks: ", num_forks[i],
+      "\nWatchers: ", num_watchers[i], "\n\n")
+}
+
 #Followers Details
 myfol = fromJSON(me$followers_url)
 followers_usernames = myfol$login
 
+#Print out the data in a readable manner
+cat("My Followers: ", followers_usernames)
+
 #INTERROGATING AN ORGANISATION - e.g. Facebook
 org = fromJSON("https://api.github.com/orgs/facebook")
-name = org$name
+org_name = org$name
 org_username = org$login
 blog = org$blog
 num_public_repos = org$public_repos
 orgmembers = fromJSON("https://api.github.com/orgs/facebook/members")
 members_usernames = orgmembers$login
+num_members = length(members_usernames)
+
+#Print out Organisation Details in a readable manner
+cat("Organisation Name: ", org_name,
+    "\nUsername: ", org_username,
+    "\nNumber of Members: ", num_members,
+    "\nBlog: ", blog, 
+    "\nPublic Repositories: ", num_public_repo, 
+    "\nMember Usernames: ", members_usernames)
