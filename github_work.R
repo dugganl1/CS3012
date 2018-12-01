@@ -10,7 +10,8 @@ followerslink = "/followers"
 followinglink = "/following"
 
 x = gh(paste(userslink, "dugganl1", sep = ""))
-x$
+gh(x$repos_url)
+
 
 #FUNCTIONS --------------------------------------------------------------------------------------
 #Should be able to pass in any username IN QUOTES
@@ -26,15 +27,20 @@ numFollowers = function(username)
 followers = function(username)
 {
   user = gh(paste(userslink, username, sep = ""))
-  list = gh(user$followers_url)
+  list = gh(user$followers_url, .limit = 100)
   
-  followers = vector()
-  for(i in 1:numFollowers(username))
+  if(numFollowers(username) > 0)
   {
-    followers = c(followers, list[[i]]$login)
+    followers = vector()
+    for(i in 1:numFollowers(username))
+    {
+      followers = c(followers, list[[i]]$login)
+    }
+    
+    return(followers)
   }
   
-  return(followers)
+  return("No Followers")
 }
 
 #How many are they Following? 
@@ -51,15 +57,22 @@ following = function(username)
   user = paste(userslink, username, sep = "")
   list = gh(paste(user, followinglink, sep= ""))
   
-  following = vector()
-  for(i in 1:numFollowing(username))
+  
+  if(numFollowing(username) > 0)
   {
-    following = c(following, list[[i]]$login)
+    following = vector()
+    
+    for(i in 1:numFollowing(username))
+    {
+      following = c(following, list[[i]]$login)
+    }
+    
+    return(following)
   }
   
-  return(following)
+  return("Not following anybody")
 }
-following("hollanco")
+following("dugganl1")
 
 #Location
 location = function(username)
@@ -84,3 +97,77 @@ lastActive = function(username)
   updated = substring(toString(user$updated_at), 1, 10)
   return(updated)
 }
+
+#Number of public repositories? 
+numRepos = function(username)
+{
+  user = gh(paste(userslink, username, sep = ""))
+  num = user$public_repos
+  return(num)
+}
+
+#List these repositories by name
+listRepos = function(username)
+{
+  user = gh(paste(userslink, username, sep = ""))
+  list = gh(user$repos_url)
+  
+  listRepos = vector()
+  for(i in 1:numRepos(username))
+  {
+    listRepos = c(listRepos, list[[i]]$name)
+  }
+  
+  return(listRepos)
+}
+
+#Languages of these repositories 
+listLanguages = function(username)
+{
+  user = gh(paste(userslink, username, sep = ""))
+  list = gh(user$repos_url)
+  
+  listLanguages = vector()
+  for(i in 1:numRepos(username))
+  {
+    listLanguages = c(listLanguages, list[[i]]$language)
+  }
+  
+  return(listLanguages)
+}
+
+#LOCATION DATA----------------------------------------------------------------------------------
+#I want to get the location of someone's followers (if they provide it) and plot these on a map/barchart. 
+#More interesting to choose an account with lots of followers. 
+#User: "gitser"
+
+
+
+
+
+#LANGUAGE DATA----------------------------------------------------------------------------------
+#Are the most popular languages of one user related to the most popular languages among his/her
+#followers?
+listLanguages("afshinea")
+
+followers("dugganl1")
+
+#BUILD A NETWORK of users in a Matrix-----------------------------------------------------------
+networkmatrix = matrix(NA, 250, 6)
+length = 0
+
+buildUserNetwork = function(username){
+  networkmatrix[1,0] = c(username, numFollowers(username), numFollowing(username), 
+                         location(username), dateCreated(username), lastActive(username))
+  length = length + 1
+  
+}
+
+
+
+#--PLOTLY UPLOAD--------------------------------------------------------------------------------
+Sys.setenv("plotly_username"="dugganl1")
+Sys.setenv("plotly_api_key"="tVrk2miiCJ70HGlCczH1")
+
+
+#LINKS TO PLOTS---------------------------------------------------------------------------------
