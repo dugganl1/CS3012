@@ -6,11 +6,11 @@ library(plotly)
 
 #These are strings that are regularly needed, so I've assigned them to variables to make the code cleaner
 userslink = "/users/"
-followers = "/followers"
-following = "/following"
+followerslink = "/followers"
+followinglink = "/following"
 
 x = gh(paste(userslink, "dugganl1", sep = ""))
-x$created_at
+x$
 
 #FUNCTIONS --------------------------------------------------------------------------------------
 #Should be able to pass in any username IN QUOTES
@@ -18,23 +18,48 @@ x$created_at
 numFollowers = function(username)
 {
   user = gh(paste(userslink, username, sep = ""))
-  followers = user$followers
-  return(followers)
+  num_followers = user$followers
+  return(num_followers)
 }
 
 #List of followers
 followers = function(username)
 {
+  user = gh(paste(userslink, username, sep = ""))
+  list = gh(user$followers_url)
   
+  followers = vector()
+  for(i in 1:numFollowers(username))
+  {
+    followers = c(followers, list[[i]]$login)
+  }
+  
+  return(followers)
 }
 
 #How many are they Following? 
 numFollowing = function(username)
 {
   user = gh(paste(userslink, username, sep = ""))
-  following = user$following
+  num_following = user$following
+  return(num_following)
+}
+
+#List of following
+following = function(username)
+{
+  user = paste(userslink, username, sep = "")
+  list = gh(paste(user, followinglink, sep= ""))
+  
+  following = vector()
+  for(i in 1:numFollowing(username))
+  {
+    following = c(following, list[[i]]$login)
+  }
+  
   return(following)
 }
+following("hollanco")
 
 #Location
 location = function(username)
@@ -51,7 +76,6 @@ dateCreated = function(username)
   created = substring(toString(user$created_at), 1, 10)
   return(created)
 }
-dateCreated("dugganl1")
 
 #When was the last activity? 
 lastActive = function(username)
@@ -60,4 +84,3 @@ lastActive = function(username)
   updated = substring(toString(user$updated_at), 1, 10)
   return(updated)
 }
-lastActive("dugganl1")
