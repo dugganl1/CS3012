@@ -26,13 +26,16 @@ numFollowers = function(username)
 #List of followers
 followers = function(username)
 {
+  followerCount = numFollowers(username)
+  limit = 10
   user = gh(paste(userslink, username, sep = ""))
-  list = gh(user$followers_url, .limit = 100)
+  list = gh(user$followers_url, .limit = limit)
   
-  if(numFollowers(username) > 0)
+  if(followerCount > 0)
   {
+    
     followers = vector()
-    for(i in 1:numFollowers(username))
+    for(i in 1:min(numFollowers(username), limit))
     {
       followers = c(followers, list[[i]]$login)
     }
@@ -40,7 +43,7 @@ followers = function(username)
     return(followers)
   }
   
-  return("No Followers")
+  return(NULL)
 }
 
 #How many are they Following? 
@@ -54,15 +57,18 @@ numFollowing = function(username)
 #List of following
 following = function(username)
 {
+  limit = 10
+  followingCount = numFollowing(username)
+  
   user = paste(userslink, username, sep = "")
-  list = gh(paste(user, followinglink, sep= ""))
+  list = gh(paste(user, followinglink, sep= ""), .limit = limit)
   
   
-  if(numFollowing(username) > 0)
+  if(followingCount > 0)
   {
     following = vector()
     
-    for(i in 1:numFollowing(username))
+    for(i in 1:min(numFollowing(username), limit))
     {
       following = c(following, list[[i]]$login)
     }
@@ -70,7 +76,7 @@ following = function(username)
     return(following)
   }
   
-  return("Not following anybody")
+  return(NULL)
 }
 following("dugganl1")
 
@@ -157,12 +163,34 @@ networkmatrix = matrix(NA, 250, 6)
 length = 0
 
 buildUserNetwork = function(username){
+  activeuser = username
   networkmatrix[1,0] = c(username, numFollowers(username), numFollowing(username), 
                          location(username), dateCreated(username), lastActive(username))
   length = length + 1
   
+  cat("Username:", username)
+  
+  if(numFollowers(username) > 0)
+  {
+    list = followers(username)
+    
+    for(i in 1:min(length(username), 10))
+    {
+      if(length == 250){break}
+      else{
+        new = list[[i]]
+        
+        if(any(new %in% networkmatrix[,1])){}
+        else{
+          networkmatrix[length+1, ] = c(new, numFollowers(new), numFollowing(new), 
+                                       location(new), dateCreated(new), lastActive(new) )
+          length = length + 1
+        }
+      }
+    }
+  }
+  
 }
-
 
 
 #--PLOTLY UPLOAD--------------------------------------------------------------------------------
