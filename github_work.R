@@ -1,55 +1,68 @@
-#I previously used a different approach, but came across this Github Library on Github, called gh
-#It's an extremely mnimal client for accessing the Github API
-#https://github.com/r-lib/gh
-require(gh)
-library(plotly)
+#Source: Michael Galarnyk - "Accessing Data from Github API using R"
 
+#Install the necessary packages (if they're not already installed)
+#install.packages("jsonlite")
+#install.packages("httpuv")
+#install.packages("httr")
+
+#Call the libraries
+library(jsonlite)
+library(httpuv)
+library(httr)
+
+#In this case its "github", but it can also be changed to "linkedin" etc. depending on the application
+oauth_endpoints("github")
+
+# Change based on what you 
+myapp = oauth_app(appname = "Access_Github",
+                  key = "c9f6512c3f31d1aa3903",
+                  secret = "d7d44751a94ae1971a4fae279446f7cf6c6b4d5f")
+
+# Get OAuth credentials
+github_token = oauth2.0_token(oauth_endpoints("github"), myapp)
+
+# Use API
+gtoken = config(token = github_token)
+req = GET("https://api.github.com/users/dugganl1/repos", gtoken)
+
+# Take action on http error
+stop_for_status(req)
+
+# Extract content from a request
+json1 = content(req)
+
+#FUNCTIONS--------------------------------------------------------------------------------------
+#Number of followers
 #These are strings that are regularly needed, so I've assigned them to variables to make the code cleaner
-userslink = "/users/"
+userslink = "https://api.github.com/users/"
 followerslink = "/followers"
 followinglink = "/following"
+perpagelink = "?per_page="
 
-x = gh(paste(userslink, "dugganl1", sep = ""))
-gh(x$repos_url)
-
-
-#FUNCTIONS --------------------------------------------------------------------------------------
-#Should be able to pass in any username IN QUOTES
-#Number of Followers
 numFollowers = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
+  
   num_followers = user$followers
   return(num_followers)
 }
 
 #List of followers
+#Will have to revisit using perPage as a limit
 followers = function(username)
 {
   followerCount = numFollowers(username)
-  limit = 10
-  user = gh(paste(userslink, username, sep = ""))
-  list = gh(user$followers_url, .limit = limit)
+  user = fromJSON(paste(userslink, username, sep =""))
+  userfol = fromJSON(user$followers_url)
+  list = userfol$login
   
-  if(followerCount > 0)
-  {
-    
-    followers = vector()
-    for(i in 1:min(numFollowers(username), limit))
-    {
-      followers = c(followers, list[[i]]$login)
-    }
-    
-    return(followers)
-  }
-  
-  return(NULL)
+  return(list)
 }
 
 #How many are they Following? 
 numFollowing = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
   num_following = user$following
   return(num_following)
 }
@@ -57,33 +70,16 @@ numFollowing = function(username)
 #List of following
 following = function(username)
 {
-  limit = 10
   followingCount = numFollowing(username)
-  
-  user = paste(userslink, username, sep = "")
-  list = gh(paste(user, followinglink, sep= ""), .limit = limit)
-  
-  
-  if(followingCount > 0)
-  {
-    following = vector()
-    
-    for(i in 1:min(numFollowing(username), limit))
-    {
-      following = c(following, list[[i]]$login)
-    }
-    
-    return(following)
-  }
-  
-  return(NULL)
+  userfol = fromJSON(paste(userslink, username, followinglink, sep = ""))
+  list = userfol$login
+  return(list)
 }
-following("dugganl1")
 
 #Location
 location = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
   location = user$location
   return(location)
 }
@@ -91,7 +87,7 @@ location = function(username)
 #When was the account created? 
 dateCreated = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
   created = substring(toString(user$created_at), 1, 10)
   return(created)
 }
@@ -99,7 +95,7 @@ dateCreated = function(username)
 #When was the last activity? 
 lastActive = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
   updated = substring(toString(user$updated_at), 1, 10)
   return(updated)
 }
@@ -107,7 +103,7 @@ lastActive = function(username)
 #Number of public repositories? 
 numRepos = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
+  user = fromJSON(paste(userslink, username, sep =""))
   num = user$public_repos
   return(num)
 }
@@ -115,83 +111,81 @@ numRepos = function(username)
 #List these repositories by name
 listRepos = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
-  list = gh(user$repos_url)
+  user = fromJSON(paste(userslink, username, sep =""))
+  list = fromJSON(user$repos_url)$name
   
-  listRepos = vector()
-  for(i in 1:numRepos(username))
-  {
-    listRepos = c(listRepos, list[[i]]$name)
-  }
-  
-  return(listRepos)
+  return(list)
 }
 
 #Languages of these repositories 
 listLanguages = function(username)
 {
-  user = gh(paste(userslink, username, sep = ""))
-  list = gh(user$repos_url)
+  user = fromJSON(paste(userslink, username, sep =""))
+  list = fromJSON(user$repos_url)$language
   
-  listLanguages = vector()
-  for(i in 1:numRepos(username))
-  {
-    listLanguages = c(listLanguages, list[[i]]$language)
-  }
-  
-  return(listLanguages)
+  return(list)
 }
 
-#LOCATION DATA----------------------------------------------------------------------------------
-#I want to get the location of someone's followers (if they provide it) and plot these on a map/barchart. 
-#More interesting to choose an account with lots of followers. 
-#User: "gitser"
-
-
-
-
-
-#LANGUAGE DATA----------------------------------------------------------------------------------
-#Are the most popular languages of one user related to the most popular languages among his/her
-#followers?
-listLanguages("afshinea")
-
-followers("dugganl1")
-
 #BUILD A NETWORK of users in a Matrix-----------------------------------------------------------
+#matrix with login name, followers, following
 networkmatrix = matrix(NA, 250, 6)
-length = 0
+totalusers = 0
+max = 150
 
-buildUserNetwork = function(username){
+buildNetwork = function(username){
+  networkmatrix[1, ] = c(username, numFollowers(username), numFollowing(username), numRepos(username), dateCreated(username), lastActive(username))
+  length = 1
+  check = 1
   activeuser = username
-  networkmatrix[1,0] = c(username, numFollowers(username), numFollowing(username), 
-                         location(username), dateCreated(username), lastActive(username))
-  length = length + 1
   
-  cat("Username:", username)
-  
-  if(numFollowers(username) > 0)
-  {
-    list = followers(username)
+  while(length<250){
+    getUser(activeuser)
+    print(check)
+    print(length)
+    ###check that this user is following others
+    if(followingCount(activeuser) <= 1 | followingCount(activeuser)>50){
+      check = check + 1
+    }
     
-    for(i in 1:min(length(username), 10))
-    {
-      if(length == 250){break}
-      else{
-        new = list[[i]]
-        
-        if(any(new %in% networkmatrix[,1])){}
+    ###if we get here, users will be added
+    else{
+      followingl = followingList(activeuser)
+      limit = min(followingCount(activeuser),30)
+      for (j in 1:limit){
+        if(length ==250){ break }
         else{
-          networkmatrix[length+1, ] = c(new, numFollowers(new), numFollowing(new), 
-                                       location(new), dateCreated(new), lastActive(new) )
-          length = length + 1
+          if (any(followingl[[j]] %in% networkmatrix[, 1])) {}
+          else{
+            new = followingl[[j]]
+            networkmatrix[length+1, ] = c(new, numFollowers(new), numFollowing(new), numRepos(new), dateCreated(new), lastActive(new))
+            length = length+1
+          }
+          
         }
       }
     }
+    if(activeuser == "cwells"){
+      activeuser =  "etrepum"
+    }
+    else if(activeuser == "antirez"){
+      activeuser = "soveran"
+    }else if(activeuser == "soveran"){
+      activeuser = "cyx"
+      check = 3
+    }else if(activeuser == "jorrel"){
+      activeuser = "FooBarWidget"
+    }
+    else{
+      activeuser = followingl[[check]]
+      
+    }
+    
   }
-  
+  return(networkmatrix)
 }
 
+o = buildNetwork("dugganl1")
+o
 
 #--PLOTLY UPLOAD--------------------------------------------------------------------------------
 Sys.setenv("plotly_username"="dugganl1")
