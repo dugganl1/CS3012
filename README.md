@@ -38,4 +38,4 @@ _Here, you'd expect that increased activity (evidenced by the number of reposito
 following_
 
 Example of a plot:
-![alt text](https://raw.githubusercontent.com/username/projectname/branch/path/to/img.png)
+![alt text](https://github.com/dugganl1/CS3012/blob/master/singleUserLanguages.png)
