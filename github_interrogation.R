@@ -176,6 +176,7 @@ barChart = function(username){
   
   x = c("Following", "Followers")
   y = c(numFollowing(username), numFollowers(username))
+  data = data.frame(x,y)
 
   p <- plot_ly(data, x = ~x, y = ~y, type = 'bar', 
                text = y, textposition = 'auto',
@@ -188,14 +189,17 @@ barChart = function(username){
   return(p)
 }
 
-x = barChart("paulirish")
+x = barChart("marcus7777")
 xlink = api_create(x, filename = "followingfollowerratio")
+xlink
 
 #BUILD A NETWORK OF USERS-----------------------------------------------------------------------
 
 #Only going to take 10 followers from each user, then move onto the next
-userfollowers = jsonlite::fromJSON(paste0(userslink, username, followinglink, perpagelink, "10"))
-list = userfollowers$login
+get = GET(paste0(userslink, username, followinglink, perpagelink, "10"))
+userfollowers = content(get)
+df = jsonlite::fromJSON(jsonlite::toJSON(userfollowers))
+list = c(df$login)
 
 allUsers = c()
 
@@ -206,8 +210,10 @@ for(i in 1:length(list))
 {
   activeUser = list[i]
   
-  activeUserFollowers = jsonlite::fromJSON(paste0(userslink, username, followinglink, perpagelink, "10"))
-  activeFollowerList = activeUserFollowers$login
+  getau = GET(paste0(userslink, username, followinglink, perpagelink, "10"))
+  useractivefollowers = content(getau)
+  df = jsonlite::fromJSON(jsonlite::toJSON(userfollowers))
+  activeFollowerList = c(df$login)
   
   if(length(activeFollowerList) == 0)
   {
@@ -225,7 +231,7 @@ for(i in 1:length(list))
                                                      lastActive(login))
     }
     
-    if(length(allUsers) > 100){break}
+    if(length(allUsers) > 50){break}
     next
   }
   next
