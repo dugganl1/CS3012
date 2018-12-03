@@ -159,8 +159,6 @@ for(i in 1:length(list))
 
 repo_languages = data.frame(table(as.data.frame(alllanguages)))
 
-#Removing Frequencies Less than 5 as these don't tell us much!
-repo_languages2 = repo_languages[, .I[.N >= 2], by =~Freq]
 
 #Plot this in a pie chart too
 followerLanguagesPie = plot_ly(data = repo_languages, values =~Freq, labels=~Var1, type = "pie",
@@ -172,89 +170,81 @@ followerLanguagesPie = plot_ly(data = repo_languages, values =~Freq, labels=~Var
 followerLanguagesPie_link = api_create(followerLanguagesPie, filename = "followerLanguages")
 followerLanguagesPie_link
 
-# #BUILD A NETWORK of users in a Matrix-----------------------------------------------------------
-# networkmatrix = matrix(NA, 250, 6)
-# length = 0
-# 
-# buildUserNetwork = function(username){
-#   
-#   networkmatrix[1,] = c(username, numFollowers(username), numFollowing(username), 
-#                                   numRepos(username), dateCreated(username), lastActive(username))
-#   length = 1
-#   
-#   while(length < 250)
-#   {
-#     cat("Username:", username)
-#     
-#       list = following(username)
-#       
-#       for(i in 1:min(numFollowing(username), 30))
-#       {
-#         if(length == 250){break}
-#         if(numFollowing(username) == 0){next}
-#         else{
-#           new = list[[i]]
-#           
-#           if(any(new %in% networkmatrix[,1])){}
-#           else{
-#             networkmatrix[length+1, ] = c(new, numFollowers(new), numFollowing(new),
-#                                           numRepos(new), dateCreated(new), lastActive(new))
-#             length = length + 1
-#           }
-#         }
-#       }
-#   }
-# 
-#   return(networkmatrix)
-# }
-
-#BUILD A NETWORK of users in a Matrix-----------------------------------------------------------
-#matrix with login name, followers, following
-networkmatrix = matrix(NA, 25, 6)
-totalusers = 0
-max = 150
-
-buildNetwork = function(username){
-  networkmatrix[1, ] = c(username, numFollowers(username), numFollowing(username), numRepos(username), dateCreated(username), lastActive(username))
-  length = 1
-  check = 1
-  activeuser = username
+#RATIO OF FOLLOWING:FOLLOWERS
+#Here's a function that produces a bar chart of that users ratio of following to followers. 
+barChart = function(username){
   
-  while(length<25){
-    print(length)
-    ###check that this user is following others
-    if(numFollowing(activeuser) <= 1 | numFollowing(activeuser)>50){
-      check = check + 1
-    }
-    
-    ###if we get here, users will be added
-    else{
-      followingl = followingList(activeuser)
-      limit = min(followingCount(activeuser),30)
-      for (j in 1:limit){
-        if(length ==250){ break }
-        else{
-          if (any(followingl[[j]] %in% networkmatrix[, 1])) {}
-          else{
-            new = followingl[[j]]
-            networkmatrix[length+1, ] = c(new, numFollowers(new), numFollowing(new), numRepos(new), dateCreated(new), lastActive(new))
-            length = length+1
-          }
-          
-        }
-      }
-    }
-    
-  }
-  return(networkmatrix)
+  x = c("Following", "Followers")
+  y = c(numFollowing(username), numFollowers(username))
+
+  p <- plot_ly(data, x = ~x, y = ~y, type = 'bar', 
+               text = y, textposition = 'auto',
+               marker = list(color = 'rgb(158,202,225)',
+                             line = list(color = 'rgb(8,48,107)', width = 1.5))) %>%
+    layout(title = "Following:Followers Ratio",
+           xaxis = list(title = ""),
+           yaxis = list(title = ""))
+  
+  return(p)
 }
 
-o = buildNetwork("dugganl1")
-o
+x = barChart("paulirish")
+xlink = api_create(x, filename = "followingfollowerratio")
 
-#--PLOTLY UPLOAD--------------------------------------------------------------------------------
+#BUILD A NETWORK OF USERS-----------------------------------------------------------------------
+
+#Only going to take 10 followers from each user, then move onto the next
+userfollowers = jsonlite::fromJSON(paste0(userslink, username, followinglink, perpagelink, "10"))
+list = userfollowers$login
+
+allUsers = c()
+
+masterDataFrame = data.frame(username = integer(), numFollowers = integer(), numFollowing = integer(),
+                             numRepos = integer(), dateCreated = integer(), lastActive = integer())
+
+for(i in 1:length(list))
+{
+  activeUser = list[i]
+  
+  activeUserFollowers = jsonlite::fromJSON(paste0(userslink, username, followinglink, perpagelink, "10"))
+  activeFollowerList = activeUserFollowers$login
+  
+  if(length(activeFollowerList) == 0)
+  {
+    next
+  }
+  
+  for(j in 1:length(activeFollowerList))
+  {
+    login = activeFollowerList[j]
+    
+    if(any(login %in% allUsers)){}
+    else{
+      masterDataFrame[nrow(masterDataFrame)+1, ] = c(login, numFollowers(login), numFollowing(login),
+                                                     numRepos(login), dateCreated(login), 
+                                                     lastActive(login))
+    }
+    
+    if(length(allUsers) > 100){break}
+    next
+  }
+  next
+}
 
 
+#Plot NUMBER OF REPOSITORIES vs NUMBER OF FOLLOWERS --------------------------------------------
+#Before visualising the data, I'd intuitively expect that more active followers (shown by how
+#many repositories they have) would have more followers. 
+scatter <- plot_ly(data = masterDataFrame, x =~numRepos, y = ~numFollowers,
+              type = "scatter",
+             text = ~paste("Repositories: ", numRepos, '<br>Followers: ', numFollowers),
+             marker = list(size = 10,
+                           color = 'rgba(255,102,255,0.2)',
+                           line = list(color = 'rgba(152, 0, 0, .8)',
+                                       width = 2))) %>%
+  layout(title = 'Number of Repositories vs Number of Followers',
+         yaxis = list(zeroline = FALSE),
+         xaxis = list(zeroline = FALSE))
 
-#LINKS TO PLOTS---------------------------------------------------------------------------------
-
+scatterLink = api_create(scatter, fileName = "followersRepositories")
+scatterLink
