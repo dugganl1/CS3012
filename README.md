@@ -36,3 +36,6 @@ so it's interesting to compare these pie charts_
 * A scatter plot of a user's number of repositories and number following
 _Here, you'd expect that increased activity (evidenced by the number of repositories) would lead to more followers and 
 following_
+
+Example of a plot:
+![alt text](https://raw.githubusercontent.com/username/projectname/branch/path/to/img.png)
