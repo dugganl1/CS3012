@@ -29,11 +29,13 @@ Relevant Files: github_interrogation.R
 I used Plotly to create these visualisations, including
 * A pie chart of a user's repository languages ([link](https://plot.ly/~dugganl1/1/#/))
 * A pie chart of the languages used in the repositories of that user's followers. ([link](https://plot.ly/~dugganl1/3/#/))
+
 _Naturally, you'd expect that people are following users that create repositories in languages they're interested in, 
 so it's interesting to compare these pie charts_
 * A bar chart of the user's ratio of following:followers (A simple graph created by simply passing in the username) ([link](https://plot.ly/~dugganl1/15/#/))
 * A scatter plot of a user's number of repositories and number of followers 
 * A scatter plot of a user's number of repositories and number following
+
 _Here, you'd expect that increased activity (evidenced by the number of repositories) would lead to more followers and 
 following_
 
