@@ -248,3 +248,19 @@ scatter <- plot_ly(data = masterDataFrame, x =~numRepos, y = ~numFollowers,
 
 scatterLink = api_create(scatter, fileName = "followersRepositories")
 scatterLink
+
+#You might also expect more active users to follow more people, so lets plot the
+#NUMBER OF REPOSITORIES vs NUMBER FOLLOWING too
+scatter2 <- plot_ly(data = masterDataFrame, x =~numRepos, y = ~numFollowing,
+                   type = "scatter",
+                   text = ~paste("Repositories: ", numRepos, '<br>Following: ', numFollowers),
+                   marker = list(size = 10,
+                                 color = 'rgba(255,102,255,0.2)',
+                                 line = list(color = 'rgba(152, 0, 0, .8)',
+                                             width = 2))) %>%
+  layout(title = 'Number of Repositories vs Number Following',
+         yaxis = list(zeroline = FALSE),
+         xaxis = list(zeroline = FALSE))
+
+scatterLink2 = api_create(scatter2, fileName = "followingRepositories")
+scatterLink2
